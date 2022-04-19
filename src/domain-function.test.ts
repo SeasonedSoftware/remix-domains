@@ -51,7 +51,7 @@ describe('makeDomainFunction', () => {
       envParser,
     )(async ({ id }, { uid }) => [id, uid])
 
-    expect(await handler({ id: '1' }, { uid: '2' })).toEqual({
+    expect(await handler({ id: '1' }, { uid: 2 })).toEqual({
       success: true,
       data: [1, 2],
       errors: [],

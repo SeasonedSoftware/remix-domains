@@ -25,7 +25,7 @@ type MakeDomainFunction = <
     inputSchema: z.infer<Schema>,
     environmentSchema: z.infer<EnvSchema>,
   ) => Promise<Output>,
-) => DomainFunction<Output>
+) => DomainFunction<Output, z.infer<EnvSchema>>
 
 const formatSchemaErrors = (errors: z.ZodIssue[]): SchemaError[] =>
   errors.map((error) => {
