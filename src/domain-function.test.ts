@@ -230,6 +230,27 @@ describe('all', () => {
     })
   })
 
+  it('should use the same environment', async () => {
+    const a = makeDomainFunction(
+      z.undefined(),
+      z.object({ toIncrement: z.number() }),
+    )(async (_input, { toIncrement }) => toIncrement + 1)
+    const b = makeDomainFunction(
+      z.undefined(),
+      z.object({ toDecrement: z.number() }),
+    )(async (_input, { toDecrement }) => toDecrement - 1)
+
+    const c = all(a, b)
+
+    expect(await c(undefined, { toIncrement: 1, toDecrement: 1 })).toEqual({
+      success: true,
+      data: [2, 0],
+      errors: [],
+      inputErrors: [],
+      environmentErrors: [],
+    })
+  })
+
   it('should combine many domain functions into one', async () => {
     const a = makeDomainFunction(z.object({ id: z.number() }))(async ({ id }) =>
       String(id),
@@ -370,7 +391,7 @@ describe('pipe', () => {
     }))
     const b = makeDomainFunction(
       z.object({ inp: z.number() }),
-      z.object({ env: z.number() }),
+      z.object({ env: z.number(), justToShowInference: z.string().optional() }),
     )(async ({ inp }, { env }) => inp + env)
 
     const c = pipe(a, b)
@@ -486,9 +507,10 @@ describe('pipe', () => {
 
 describe('map', () => {
   it('returns a domain function function that will apply a function over the results of the first one', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      async ({ id }) => id + 1,
-    )
+    const a = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.object({ justToShowInference: z.string().optional() }),
+    )(async ({ id }) => id + 1)
     const b = (id: number) => id + 1
 
     const c = map(a, b)
@@ -538,9 +560,10 @@ describe('map', () => {
 
 describe('mapError', () => {
   it('returns the result when the domain function suceeds', async () => {
-    const a = makeDomainFunction(z.object({ id: z.number() }))(
-      async ({ id }) => id + 1,
-    )
+    const a = makeDomainFunction(
+      z.object({ id: z.number() }),
+      z.object({ justToShowInference: z.string().optional() }),
+    )(async ({ id }) => id + 1)
     const b = () =>
       ({
         errors: [{ message: 'New Error Message' }],

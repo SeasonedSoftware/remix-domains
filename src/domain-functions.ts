@@ -155,10 +155,10 @@ const pipe: Flow = (...fns) => {
   }) as Last<typeof fns>
 }
 
-type Map = <O, R>(
-  dfn: DomainFunction<O>,
+type Map = <O, R, E>(
+  dfn: DomainFunction<O, E>,
   mapper: (element: O) => R,
-) => DomainFunction<R>
+) => DomainFunction<R, E>
 
 const map: Map = (dfn, mapper) => {
   return async (input, environment) => {
@@ -184,10 +184,10 @@ const map: Map = (dfn, mapper) => {
     }
   }
 }
-type MapError = <O>(
-  dfn: DomainFunction<O>,
+type MapError = <O, E>(
+  dfn: DomainFunction<O, E>,
   mapper: (element: ErrorData) => ErrorData,
-) => DomainFunction<O>
+) => DomainFunction<O, E>
 
 const mapError: MapError = (dfn, mapper) => {
   return async (input, environment) => {
