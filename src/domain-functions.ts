@@ -135,12 +135,11 @@ function isListOfSuccess<T>(result: Result<T>[]): result is SuccessResult<T>[] {
   return result.every(({ success }) => success === true)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Last<T extends readonly unknown[]> = T extends [...infer I, infer L]
   ? L
   : never
-type Flow = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
-const pipe: Flow = (...fns) => {
+type Pipe = <T extends readonly DomainFunction[]>(...fns: T) => Last<T>
+const pipe: Pipe = (...fns) => {
   const [head, ...tail] = fns
 
   return ((input: unknown, environment?: unknown) => {
@@ -153,6 +152,32 @@ const pipe: Flow = (...fns) => {
       }
     }, head(input, environment))
   }) as Last<typeof fns>
+}
+
+function sequence<T extends readonly unknown[] | []>(
+  ...fns: T
+): DomainFunction<{ -readonly [P in keyof T]: Unpack<T[P]> }> {
+  return async function (input: unknown, environment?: unknown) {
+    const results = []
+    let currResult: undefined | Result<unknown>
+    for await (const fn of fns as DomainFunction[]) {
+      const result = await fn(
+        currResult?.success ? currResult.data : input,
+        environment,
+      )
+      if (!result.success) return result
+      currResult = result
+      results.push(result.data)
+    }
+
+    return {
+      success: true,
+      data: results,
+      inputErrors: [],
+      environmentErrors: [],
+      errors: [],
+    } as unknown as SuccessResult<{ -readonly [P in keyof T]: Unpack<T[P]> }>
+  }
 }
 
 type Map = <O, R>(
@@ -208,4 +233,4 @@ const mapError: MapError = (dfn, mapper) => {
   }
 }
 
-export { makeDomainFunction, all, pipe, map, mapError }
+export { makeDomainFunction, all, pipe, sequence, map, mapError }
